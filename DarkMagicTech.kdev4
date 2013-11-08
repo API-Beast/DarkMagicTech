@@ -1,0 +1,4 @@
+[Project]
+Name=DarkMagicTech
+Manager=KDevCMakeManager
+VersionControl=kdevgit

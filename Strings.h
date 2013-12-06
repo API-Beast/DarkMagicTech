@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 std::string strip(const std::string& toStrip, char charToStrip);
 std::string strip(const std::string& toStrip, std::string charsToStrip);
@@ -30,6 +31,21 @@ inline container seperateString(const std::string& toConvert, char seperator = '
 	container retVal(vect.begin(), vect.end());
 	return retVal;
 };
+
+template<class T>
+inline T FromString(const std::string& value, T defaultValue)
+{
+  T retVal = defaultValue;
+  try
+  {
+    std::istringstream(value) >> retVal;
+  }
+  catch(...)
+  {
+    return defaultValue;
+  }
+  return retVal;
+}
 
 #endif // STRINGCONVERSION_H
 // kate: indent-mode cstyle; space-indent on; indent-width 2; replace-tabs on;  replace-tabs on;

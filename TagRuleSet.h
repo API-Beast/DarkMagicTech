@@ -12,37 +12,41 @@
 #include <set>
 #include <string>
 #include <vector>
-
-class ConfigFile;
+#include <list>
+#include "Parsing/ConfigFile.h"
 
 typedef std::set<std::string> TagSet;
 
 class TagMap;
 class TagExpression;
 class TagRule;
+
+class TagRegistry
+{
+public:
+	TagRule& registerRule(const TagRule& rule);
+	std::list<TagRule> Rules;
+};
+
 class TagRuleSet
 {
 public:
-	TagRuleSet(TagRuleSet&& other);
-	TagRuleSet();
-	~TagRuleSet();
 	TagRuleSet findMatches(const TagMap& set) const;
 	bool apply(TagMap& set);
 	void findAndApplyRecursive(TagMap& set);
-	void loadFromConfig(const ConfigFile& file, const std::string& cat);
+	void loadFromConfig(ConfigFile& file, const std::string& cat, TagRegistry* reg);
 	void sortByPriority();
 	void sortByScore(const TagMap& set);
 	TagRule*& operator[](int index);
 	int numRules();
 	std::vector<TagRule*> Rules; 
-	std::vector<TagRule>* CoreRules = nullptr;
-	bool OwnsCoreRules = false;
 };
 
 class TagExpression
 {
 public:
 	void load(const std::string& list);
+	void loadList(const std::vector<std::string>& list);
 public:
 	enum Linkage
 	{
@@ -97,15 +101,24 @@ public:
 	std::map<std::string, TagRule::Data> Expressions;
 	std::map<std::string, std::string> Extra;
 	TagRuleSet SubRules;
+	TagRuleSet Results;
 	TagSet ApplyTriggers;
 	TagSet OnTriggers;
+	
+	int ResultOrder = 0;
 	int Priority = 0;
+	
+	int MaxExecutions = 0;
+	int Executions = 0;
+	
 	int ScoreNeededForMatch = 0;
 	
 	std::string& operator[](const std::string& i){ return Extra[i]; };
+	std::vector<TagRule*> getMatchingSubrules(const TagMap& set);
+	void loadFromConfigObject(ConfigFile::Object& obj, TagRegistry* reg);
 	bool matches(const TagMap& set);
 	int calcScore(const TagMap& set);
-	bool apply(TagMap& set) const;
+	bool apply(TagMap& set);
 };
 
 #endif // TAGRULESET_H

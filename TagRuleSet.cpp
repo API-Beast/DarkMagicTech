@@ -82,7 +82,10 @@ void TagRule::loadFromConfigObject(ConfigFile::Object& obj, TagRegistry* reg)
 		}
 	}
 	for(ConfigFile::KeyValue& val : obj.Values)
-		Extra[val.Key] = val.Value.asString();
+	{
+		Properties[val.Key] = val.Value.asString();
+		ListProperties[val.Key] = val.Value.asList();
+	}
 	
 	Priority      = FromString(obj["Priority"], 0);
 	ResultOrder   = FromString(obj["ResultOrder"], 0);

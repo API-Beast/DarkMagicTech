@@ -7,12 +7,14 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <iomanip>
+
 using namespace std;
 
 template<typename T>
 void printContainer(const T& cont)
 {
-	for(auto Z : cont){ cout << Z << " "; };
+	for(auto Z : cont){ cout << '\"' << Z << '\"' << " "; };
 };
 
 TagRule* applyBestRule(const TagRuleSet& set, TagMap& tags, const TagMap& tagsToScoreBy)
@@ -23,6 +25,10 @@ TagRule* applyBestRule(const TagRuleSet& set, TagMap& tags, const TagMap& tagsTo
 		//possibleRules.sortByPriority();
 		possibleRules.sortByScore(tagsToScoreBy);
 		std::vector<TagRule*> toExecute = possibleRules[0]->getMatchingSubrules(tags);
+		if((*possibleRules[0])["PlayerAction"].empty() == false)
+		{
+			cout << setw(20) << left << (*possibleRules[0])["PlayerAction"] << " -> ";
+		}
 		for(auto rule : toExecute)
 		{
 			rule->apply(tags);
@@ -33,6 +39,17 @@ TagRule* applyBestRule(const TagRuleSet& set, TagMap& tags, const TagMap& tagsTo
 		return possibleRules[0];
 	}
 	return nullptr;
+}
+
+std::vector<std::string> getPossibleActions(const TagRuleSet& actions, const TagMap& tags)
+{
+	std::vector<std::string> possibleActions;
+	for(TagRule* rule : actions.findMatches(tags).Rules)
+	{
+		std::vector<std::string>& temp = rule->ListProperties["PlayerAction"];
+		possibleActions.insert(possibleActions.end(), temp.begin(), temp.end());
+	}
+	return possibleActions;
 }
 
 int main(int argc, char **argv)
@@ -56,12 +73,17 @@ int main(int argc, char **argv)
 	
 	for(int i=0; i<10; i++)
 	{
-		tags.resetImplications();
-		rules.findAndApplyRecursive(tags);
 		oldTags = tags;
 		TagMap deltaTags = tags.difference(oldTags);
 		applyBestRule(events, tags, deltaTags);
+		
+		tags.resetImplications();
+		rules.findAndApplyRecursive(tags);
+		
 		applyBestRule(actions, tags, deltaTags);
+		
+		tags.resetImplications();
+		rules.findAndApplyRecursive(tags);
 	}
 	return 0;
 }

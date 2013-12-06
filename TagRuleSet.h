@@ -99,7 +99,10 @@ public:
 	};
 public:
 	std::map<std::string, TagRule::Data> Expressions;
-	std::map<std::string, std::string> Extra;
+	
+	std::map<std::string, std::string> Properties;
+	std::map<std::string, std::vector<std::string>> ListProperties;
+	
 	TagRuleSet SubRules;
 	TagRuleSet Results;
 	TagSet ApplyTriggers;
@@ -113,7 +116,7 @@ public:
 	
 	int ScoreNeededForMatch = 0;
 	
-	std::string& operator[](const std::string& i){ return Extra[i]; };
+	std::string& operator[](const std::string& i){ return Properties[i]; };
 	std::vector<TagRule*> getMatchingSubrules(const TagMap& set);
 	void loadFromConfigObject(ConfigFile::Object& obj, TagRegistry* reg);
 	bool matches(const TagMap& set);

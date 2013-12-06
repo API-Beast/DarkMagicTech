@@ -20,6 +20,7 @@ Action
 {
 	PlayerAction=["Look at guard", "Look at corpse", "Look at body", "Examine guard", "Examine body", "Examine corpse"]
 	Needs: Situation = NearGuard
+	Changes: Situation = KnowsAboutGuard
 	
 	Rule
 	{
@@ -85,7 +86,7 @@ Action
 
 	Changes: Player    = HasCellDoorKeys
 	Needs:   Player    = !HasCellDoorKeys
-	Needs:   Situation = NearGuard
+	Needs:   Situation = [NearGuard, KnowsAboutGuard]
 }
 
 Action
@@ -94,7 +95,7 @@ Action
 	Text = "You take the sword of the guard."
 
 	Changes: Player    = HasShortSword
-	Needs:   Situation = NearGuard
+	Needs:   Situation = [NearGuard, KnowsAboutGuard]
 	Needs:   Player    = !HasShortSword
 }
 

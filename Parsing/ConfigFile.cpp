@@ -67,8 +67,8 @@ namespace
 			// One-line Child Object
 			else if(oper == ':')
 			{
-				context->Children.emplace_back(key, context);
-				curLineContext = &(context->Children.back());
+				shallowContext->Children.emplace_back(key, shallowContext);
+				curLineContext = &(shallowContext->Children.back());
 			}
 			// Hierachies
 			else if(oper == '{')

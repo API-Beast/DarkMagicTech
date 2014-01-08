@@ -1,31 +1,56 @@
+[Object]
+ID = #Player
+Tags = [IsPlayer, In(#Cell), Hungry] 
+
+[Object]
+ID = #Guard
+Tags = [IsStartGuard, In(#Cell), Dead]
+
+[Object]
+ID = #Cell
+Tags = IsLocation
+
+[Object]
+ID = #Hallway
+Tags = IsLocation
+
 Event
 {
 	Text = "You wake up, weak, hungry, cold. In front of you a is a door, out of solid iron bars. On the other side is a long hallway, dimly lit by torches. You look down, and see a guard leaning back on the cell door, he is not moving."
 	
 	Priority = 1000
 	MaxExecutions = 1
-	Changes: Situation = InCell
-	Changes: Player    = Hungry
 }
 
 [Rule]
-Needs:   Player = Hungry
-Implies: Player = Weak
+Takes: $LocationA = IsLocation
+Takes: $LocationB = IsLocation
+Takes:   $Subject = [In($LocationA), In($LocationB)]
+Changes: $Subject = !In($LocationB)
+Text = "WARNING: Object was in 2 locations at the same time, fixed that."
 
 [Rule]
-Needs:   Situation = InCell
-Implies: Situation = NearGuard
+Takes: $Location = IsLocation
+Takes: $A = In($Location)
+Takes: $B = In($Location)
+Implies: $A = Near($B)
+Implies: $B = Near($A)
 
 Action
 {
 	PlayerAction=["Look at guard", "Look at corpse", "Look at body", "Examine guard", "Examine body", "Examine corpse"]
-	Needs: Situation = NearGuard
-	Changes: Situation = KnowsAboutGuard
+	Needs: #Player = Near(#Guard)
+	Changes = KnowsAboutGuard
 	
 	Rule
 	{
 		; Display at start of text
 		ResultOrder = +1
+	
+		[Result]
+		MaxExecutions = 1
+		Priority =  30
+		Text = "You carefully reach for the guard, his skin is cold and he doesn't appear to be breathing."
 	
 		[Result]
 		MaxExecutions = 1
@@ -55,7 +80,7 @@ Action
 		[Result]
 		MaxExecutions = 1
 		Priority =  1
-		Text = "What might have killed him?"
+		Text = "You have no clue what killed him."
 		
 		Result{}
 	}
@@ -63,19 +88,52 @@ Action
 	Result
 	{
 		Text = "At his belt is a chain of keys and a short sword. "
-		Needs: Player = [!HasCellDoorKeys, !HasShortSword]
+		Needs: #Player = [!HasCellDoorKeys, !HasShortSword]
 	}
 
 	Result
 	{
 		Text = "His short sword is within reach."
-		Needs: Player = [HasCellDoorKeys, !HasShortSword]
+		Needs: #Player = [HasCellDoorKeys, !HasShortSword]
 	}
 	
 	Result
 	{
 		Text = "You have taken everything useful from him."
-		Needs: Player = [HasCellDoorKeys, HasShortSword]
+		Needs: #Player = [HasCellDoorKeys, HasShortSword]
+	}
+}
+
+Action
+{
+	PlayerAction = ["Walk Forward", "Continue", "Advance"]
+	
+	Result
+	{
+		Needs: #Player = In(#Cell)
+		
+		[Result]
+		Needs = !CellDoorUnlocked
+		Text  = "The door is locked." 
+		
+		[Result]
+		Needs   = CellDoorUnlocked
+		Text    = "You move through the door into the hallway."
+		Changes: #Player = [In(#Hallway), !In(#Cell)]
+	}
+	
+	Result
+	{
+		Needs: #Player = In(#Hallway)
+		
+		[Result]
+		Text  = "You walk through the hallway, dimly lit by the torches. You are now in front of a solid wooden door. It is iron shod."
+		Needs: #Player = !AtEndOfHallway
+		Changes: #Player = AtEndOfHallway
+		
+		[Result]
+		Text  = "No matter how much you press, the door in front of you is not opening."
+		Needs: #Player = AtEndOfHallway
 	}
 }
 
@@ -84,9 +142,9 @@ Action
 	PlayerAction=["Pick up Keys", "Take Keys"]
 	Text="You croutch to snatch the keyring from the dead body."
 
-	Changes: Player    = HasCellDoorKeys
-	Needs:   Player    = !HasCellDoorKeys
-	Needs:   Situation = [NearGuard, KnowsAboutGuard]
+	Changes: #Player    =   HasCellDoorKeys
+	Needs:   #Player    = [!HasCellDoorKeys, Near(#Guard)]
+	Needs = [NearGuard, KnowsAboutGuard]
 }
 
 Action
@@ -94,39 +152,57 @@ Action
 	PlayerAction = ["Pick up Sword", "Take Sword"]
 	Text = "You take the sword of the guard."
 
-	Changes: Player    = HasShortSword
-	Needs:   Situation = [NearGuard, KnowsAboutGuard]
-	Needs:   Player    = !HasShortSword
+	Needs = KnowsAboutGuard
+	Changes: #Player    =   HasShortSword
+	Needs:   #Player    = [!HasShortSword, Near(#Guard)]
 }
 
 Action
 {
 	PlayerAction = ["Open Door", "Push Open Door"]
-	Needs: Situation = [InCell, !CellDoorOpen]
+	Needs = !CellDoorOpen
+	Needs: #Player = In(#Cell)
 
 	Result
 	{
 		Text = "You open the cell door and move through it."
 		
-		Changes: Situation = CellDoorOpen
-		Needs:   Situation = CellDoorUnlocked
+		Changes = CellDoorOpen
+		Needs   = CellDoorUnlocked
 	}
 
 	Result
 	{
 		Text = "You try out different keys until you find one that fits. One "Clack" and the door moves and you leap out into the hallway."
 		
-		Changes: Situation = [CellDoorUnlocked, CellDoorOpen]
-		Needs:   Player    = HasCellDoorKeys
-		Needs:   Situation = !CellDoorUnlocked
+		Changes = [CellDoorUnlocked, CellDoorOpen]
+		Needs   = !CellDoorUnlocked
+		Needs: #Player = HasCellDoorKeys
 	}
 
 	Result
 	{
 		Text = "The door doesn't budge a inch. You notice the key hole."
 		
-		Needs: Situation = !CellDoorUnlocked
-		Needs: Player    = !HasCellDoorKeys
+		Needs = !CellDoorUnlocked
+		Needs: #Player = !HasCellDoorKeys
+	}
+}
+
+Action
+{
+	PlayerAction = "Go back into cell"
+	Needs: #Player = In(#Hallway)
+	Needs = CellDoorUnlocked
+	
+	Result
+	{
+		Changes: #Player = [!In(#Hallway), In(#Cell)]
+		Text = "You move back into the cell..."
+		
+		[Rule]
+		MaxExecutions=1
+		Text = "Have you forgotten something?"
 	}
 }
 
@@ -135,7 +211,7 @@ Action
 	PlayerAction = "Unlock Door"
 	Text = "You try out different keys until you find one that fits. One "Clack" and the door unlocks."
 
-	Changes: Situation = CellDoorUnlocked
-	Needs:   Situation = [InCell, !CellDoorUnlocked]
-	Needs:   Player    = HasCellDoorKeys
+	Changes = CellDoorUnlocked
+	Needs   = [In(#Cell), !CellDoorUnlocked]
+	Needs: #Player = HasCellDoorKeys
 }

@@ -36,6 +36,9 @@ void TagRuleSet::loadFromConfig(ConfigFile& file, const std::string& cat, TagReg
 
 void TagRule::loadFromConfigObject(ConfigFile::Object& obj, TagRegistry* reg)
 {
+	Expressions["Global"].Require.loadList(obj["Needs"]);
+	Expressions["Global"].Apply.loadList(obj["Changes"]);
+	Expressions["Global"].Imply.loadList(obj["Implies"]);
 	for(ConfigFile::Object& sub : obj.Children)
 	{
 		if(sub.TypeHint == "Rule")
@@ -83,8 +86,12 @@ void TagRule::loadFromConfigObject(ConfigFile::Object& obj, TagRegistry* reg)
 	}
 	for(ConfigFile::KeyValue& val : obj.Values)
 	{
-		Properties[val.Key] = val.Value.asString();
-		ListProperties[val.Key] = val.Value.asList();
+		const static std::set<std::string> reservedKeys{"Priority", "ResultOrder", "MaxExecutions", "Rule", "Result", "Needs", "Changes", "Implies"};
+		if(reservedKeys.find(val.Key) == reservedKeys.end())
+		{
+			Properties[val.Key] = val.Value.asString();
+			ListProperties[val.Key] = val.Value.asList();
+		}
 	}
 	
 	Priority      = FromString(obj["Priority"], 0);

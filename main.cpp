@@ -1,6 +1,7 @@
 #include <iostream>
 #include "TagRuleSet.h"
 #include "Parsing/ConfigFile.h"
+#include "PreciseClock.h"
 
 #include <algorithm>
 
@@ -22,8 +23,8 @@ TagRule* applyBestRule(const TagRuleSet& set, TagMap& tags, const TagMap& tagsTo
 	TagRuleSet possibleRules = set.findMatches(tags);
 	if(possibleRules.numRules())
 	{
-		//possibleRules.sortByPriority();
-		possibleRules.sortByScore(tagsToScoreBy);
+		possibleRules.sortByPriority();
+		//possibleRules.sortByScore(tagsToScoreBy);
 		std::vector<TagRule*> toExecute = possibleRules[0]->getMatchingSubrules(tags);
 		if((*possibleRules[0])["PlayerAction"].empty() == false)
 		{
@@ -32,10 +33,10 @@ TagRule* applyBestRule(const TagRuleSet& set, TagMap& tags, const TagMap& tagsTo
 		for(auto rule : toExecute)
 		{
 			rule->apply(tags);
-			if((*rule)["Text"].empty() == false)
-				cout << (*rule)["Text"] << " ";
+			//if((*rule)["Text"].empty() == false)
+			//	cout << (*rule)["Text"] << " ";
 		}
-		cout << endl;
+		//cout << endl;
 		return possibleRules[0];
 	}
 	return nullptr;
@@ -55,35 +56,46 @@ std::vector<std::string> getPossibleActions(const TagRuleSet& actions, const Tag
 int main(int argc, char **argv)
 {
 	ConfigFile file;
-	file.loadFromFile("./Data/DarkMagicStart.xini");
+	file.loadFromFile("./Data/PerformanceTest.xini");
 	
 	srand(time(NULL));
 	
-	TagRegistry reg;
-	TagRuleSet rules;
-	TagRuleSet actions;
-	TagRuleSet events;
-	TagMap tags;
-	TagMap oldTags;
-	tags["Situation"].Mutable.insert("Start");
-	
-	   rules.loadFromConfig(file, "Rule"  , &reg);
-	 actions.loadFromConfig(file, "Action", &reg);
-	  events.loadFromConfig(file, "Event" , &reg);
-	
-	for(int i=0; i<10; i++)
+	PreciseClock timer;
+	timer.start();
 	{
-		oldTags = tags;
-		TagMap deltaTags = tags.difference(oldTags);
-		applyBestRule(events, tags, deltaTags);
+		TagRegistry reg;
+		TagRuleSet rules;
+		TagRuleSet actions;
+		TagRuleSet events;
+		TagMap tags;
+		TagMap oldTags;
+		tags["Global"].Mutable.insert("Start");
 		
-		tags.resetImplications();
-		rules.findAndApplyRecursive(tags);
+			rules.loadFromConfig(file, "Rule"  , &reg);
+		actions.loadFromConfig(file, "Action", &reg);
+			events.loadFromConfig(file, "Event" , &reg);
 		
-		applyBestRule(actions, tags, deltaTags);
+		cout << "Time needed for loading " << timer.elapsed() << "s" << endl;
+		timer.start();
 		
-		tags.resetImplications();
-		rules.findAndApplyRecursive(tags);
+		int i = 0;
+		while(!(tags["Global"].Mutable.count("FinalStop")))
+		{
+			oldTags = tags;
+			TagMap deltaTags = tags.difference(oldTags);
+			applyBestRule(events, tags, deltaTags);
+			i++;
+			
+			tags.resetImplications();
+			rules.findAndApplyRecursive(tags);
+			
+			//applyBestRule(actions, tags, deltaTags);
+			
+			tags.resetImplications();
+			rules.findAndApplyRecursive(tags);
+		}
+		cout << "Executed " << i << " turns" << endl;
+		cout << "Time needed for execution " << timer.elapsed() << "s" << endl;
+		return 0;
 	}
-	return 0;
 }

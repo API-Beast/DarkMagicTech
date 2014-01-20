@@ -1,0 +1,135 @@
+[Event]
+Text = "You wake up, weak, hungry, cold. In front of you a is a door, out of solid iron bars. On the other side is a long hallway, dimly lit by torches. You look down, and see a guard leaning back on the cell door, he is not moving."
+Priority = 1000
+MaxExecutions = 1
+PushContext = Start::Cell
+
+---Context---
+Type = Start::Cell
+
+Action
+{
+	PlayerAction=["Look at guard", "Look at corpse", "Look at body", "Examine guard", "Examine body", "Examine corpse"]
+	Changes = KnowsAboutGuard
+	
+	Rule
+	{
+		; Display at start of text
+		ResultOrder = +1
+	
+		[Result]
+		MaxExecutions = 1
+		Priority =  30
+		Text = "You carefully reach for the guard, his skin is cold and he doesn't appear to be breathing."
+	
+		[Result]
+		MaxExecutions = 1
+		Priority =  20
+		Text = "The guard lies there, dead, cold."
+		
+		[Result]
+		MaxExecutions = 1
+		Priority =  10
+		Text = "You turn your thoughts towards the dead guard."
+		
+		[Result]
+		Priority = -1
+		Text = "The guard is still lying there."
+	}
+	
+	Rule
+	{
+		; Display at end of text
+		ResultOrder = -1
+	
+		[Result]
+		MaxExecutions = 1
+		Priority =  1
+		Text = "A bite mark decorates his shoulder."
+		
+		[Result]
+		MaxExecutions = 1
+		Priority =  1
+		Text = "You have no clue what killed him."
+		
+		Result{}
+	}
+	
+	Result
+	{
+		Text = "At his belt is a chain of keys and a short sword. "
+		Needs: #Player = [!HasCellDoorKeys, !HasShortSword]
+	}
+
+	Result
+	{
+		Text = "His short sword is within reach."
+		Needs: #Player = [HasCellDoorKeys, !HasShortSword]
+	}
+	
+	Result
+	{
+		Text = "Maybe you should take his keys."
+		Needs: #Player = [!HasCellDoorKeys, HasShortSword]
+	}
+	
+	Result
+	{
+		Text = "You have taken everything useful from him."
+		Needs: #Player = [HasCellDoorKeys, HasShortSword]
+	}
+}
+
+Action
+{
+	PlayerAction=["Pick up Keys", "Take Keys"]
+	Text="You croutch to snatch the keyring from the dead body."
+
+	Changes: #Player    =   HasCellDoorKeys
+	Needs:   #Player    = [!HasCellDoorKeys]
+	Needs = [KnowsAboutGuard]
+}
+
+Action
+{
+	PlayerAction = ["Pick up Sword", "Take Sword"]
+	Text = "You take the sword of the guard."
+
+	Needs = KnowsAboutGuard
+	Changes: #Player    =  HasShortSword
+	Needs:   #Player    = !HasShortSword
+}
+
+Action
+{
+	PlayerAction = ["Open Door", "Push Open Door"]
+	Needs = !CellDoorOpen
+
+	[Result]
+	Text = "You open the cell door and move through it."
+	Changes: Start = CellDoorOpen
+	Needs: Start = CellDoorUnlocked
+	ReplaceContext = Start::Hallway
+
+	[Result]
+	Text = "You try out different keys until you find one that fits. One "Clack" and the door moves and you leap out into the hallway."
+	Changes = [CellDoorUnlocked, CellDoorOpen]
+	Needs   = !CellDoorUnlocked
+	Needs: #Player = HasCellDoorKeys
+	ReplaceContext = Start::Hallway
+
+	[Result]
+	Text = "The door doesn't budge a inch. You notice the key hole."
+	Needs = !CellDoorUnlocked
+	Needs: #Player = !HasCellDoorKeys
+}
+
+Action
+{
+	PlayerAction = "Unlock Door"
+	Text = "You try out different keys until you find one that fits. One "Clack" and the door unlocks."
+
+	Changes = CellDoorUnlocked
+	Needs   = [In(#Cell), !CellDoorUnlocked]
+	Needs: #Player = HasCellDoorKeys
+}

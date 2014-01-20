@@ -1,0 +1,6 @@
+[Object]
+ID = #Player
+Tags = [IsPlayer, Hungry]
+
+[Object]
+ID = #Guard

@@ -1,0 +1,19 @@
+---Context---
+Type=Start::Hallway
+
+Action
+{
+	PlayerAction = "Go back into cell"
+	Needs: #Player = In(#Hallway)
+	Needs = CellDoorUnlocked
+	
+	Result
+	{
+		Changes: #Player = [!In(#Hallway), In(#Cell)]
+		Text = "You move back into the cell..."
+		
+		[Rule]
+		MaxExecutions=1
+		Text = "Have you forgotten something?"
+	}
+}

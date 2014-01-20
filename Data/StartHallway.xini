@@ -1,0 +1,36 @@
+---Context---
+Type=Start::Hallway
+
+Action
+{
+	PlayerAction = "Go back into cell"
+	
+	Result
+	{
+		Text = "You move back into the cell..."
+		ReplaceContext = Start::Cell
+		
+		[Rule]
+		MaxExecutions=1
+		Text = "Have you forgotten something?"
+	}
+}
+
+Action
+{
+	PlayerAction = "Look around"
+	Text = "In front of you is a short hallway, at it's end there is large wooden door. On the left of you are more 3 more cells, all empty. On your right pale moonlight flows into the room through barred windows. Burning torches hang on the walls."
+}
+
+Action
+{
+	PlayerAction = "Look behind"
+	Text = "Behind you is the small cell you were able to escape out. Leaning on the bars is a dead guard from whom you have taken the key."
+}
+
+Action
+{
+	PlayerAction = "Take Torch"
+	Text = "You take a torch from the walls."
+	Changes: #Player = HasTorch
+}

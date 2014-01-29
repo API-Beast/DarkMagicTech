@@ -1,0 +1,58 @@
+[Event]
+Needs=!Started
+Changes=[Started, A, !G]
+Text="GO!"
+
+[Event]
+Needs=A
+Changes=[!A, B]
+Text="A"
+
+[Event]
+Needs=B
+Changes=[!B, C]
+Text="B"
+
+[Event]
+Needs=C
+Changes=[!C, D]
+Text="C"
+
+[Event]
+Needs=D
+Changes=!D
+Text="D"
+
+[Rule]
+Needs=[!A, !B, !C, !D, !F, !G, Started]
+Implies=E
+
+[Event]
+Needs=E
+Changes=F
+Text="E"
+
+[Event]
+Needs=F
+Changes=[!F, G] 
+Text="F"
+
+[Event]
+Priority = -1
+Changes = AtEnd
+
+Event
+{
+  Needs=AtEnd
+  
+  [Result]
+  MaxExecutions = 3999
+  Priority = 1
+  Changes=[!AtEnd, !Started]
+  Text="At End -> Restart"
+  
+  [Result]
+  Priority = -1
+  Changes=[!AtEnd, FinalStop]
+  Text="At End -> Finally Stop"
+}
